@@ -1,65 +1,13 @@
-// import React, { Component } from 'react';
-// import { StyleSheet, View, Text } from 'react-native';
-// import { Query } from 'react-apollo'
-// import gql from 'graphql-tag';
-
-// const CATEGORIES = gql`
-//   {
-//     categories {
-//       total
-//       category {
-//           title
-//           alias
-//           parent_categories {
-//               title
-//           }
-//       }
-//     }
-//   }
-// `;
-
-// export default class Home extends Component {
-//   render() {
-//     return (
-//       <Query
-//         query={CATEGORIES}
-//       >
-//         {
-//           ({data, error, loading}) => {
-//             if (error || loading) {
-//               console.log('error', error)
-//               console.log('loading', loading)
-//               console.log('data', data);
-//               return (<View /> )
-//             }
-//             return (
-//               <View style={styles.container}>
-//                 <Text>KEK</Text>
-//               </View>
-//             )
-//           }
-//         }
-//       </Query>
-//     )
-//   }
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center'
-//   }
-// })
 import React, { Component } from 'react';
 import { Alert } from 'react-native';
 import { Container, Header, Content, Footer, FooterTab, Button, Title, Icon, Badge, Text } from 'native-base';
 import Permissions from 'react-native-permissions'
+import { openLocation } from '../utils/permissionManager';
 import { getUserLocation } from '../utils/getUserLocation';
 import { searchBusiness } from '../utils/network/networkService';
 import Map from '../screens/map';
 import Bookmarks from '../screens/bookmarks';
-import { getStoreData } from '../utils/localStorage';
+import { getStoreData, setStoreData } from '../utils/localStorage';
 
 export default class Home extends Component {
   constructor(props) {
@@ -83,15 +31,21 @@ export default class Home extends Component {
       if (response === 'denied') {
         Alert.alert(
           'Warning',
-          'FOTD',
-          [{ text: 'Okay'}], 
+          'To open the map, you must allow the app location from setting',
+          [
+            {text: 'Settings', onPress: () => openSettings(), style: 'cancel'},
+            {text: 'Cancel'},
+          ],
           { cancelable: true })
       } else {
         getUserLocation(
           () => Alert.alert(
             'Warning',
-            'Open bro',
-            [{ text: 'Okay'}], 
+            'To open the map, you must allow the app location from setting',
+            [
+              {text: 'Settings', onPress: () => openSettings(), style: 'cancel'},
+              {text: 'Cancel'},
+            ],
             { cancelable: true }),
           (lat, long) => {
             self.fetch(lat, long)
@@ -115,9 +69,21 @@ export default class Home extends Component {
     });
   }
 
-  addBookmark(item) {
+  async addBookmark(item) {
     const joined = this.state.bookmarks.concat(item);
     this.setState({ bookmarks: joined })
+    await setStoreData('bookmarkData', joined)
+  }
+
+  async deleteBookmark(id) {
+    const bookmarksCopy = [...this.state.bookmarks];
+
+    const index = bookmarksCopy.findIndex((item) => item.id === id);
+    if (index !== -1) {
+      bookmarksCopy.splice(index, 1);
+    }
+    this.setState({bookmarks: bookmarksCopy})
+    await setStoreData('bookmarkData', bookmarksCopy)
   }
 
   navigateTo(type) {
@@ -143,7 +109,7 @@ export default class Home extends Component {
       )
     } else {
       return (
-        <Bookmarks bookmarkData={bookmarks} />
+        <Bookmarks bookmarkData={bookmarks} onPress={(item) => this.deleteBookmark(item)} />
       )
     }
   }

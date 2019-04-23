@@ -15,7 +15,7 @@ export function openSettings() {
   }
 }
 
-export function requestMapPermission() {
+export async function requestMapPermission() {
   try {
     const granted = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
