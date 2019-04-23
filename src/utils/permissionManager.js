@@ -15,19 +15,31 @@ export function openSettings() {
   }
 }
 
-export async function requestMapPermission() {
+export async function requestMapPermission(onSuccess) {
   try {
     const granted = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       {
         'title': 'Yelp',
-        'message': 'Yelp wants to use your location to find business'
+        'message': 'Yelp wants to use your location to find businesses'
       }
     )
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      getUserLocation();
+      getUserLocation(
+        () => Alert.alert(
+          'Warning',
+          'To open the map, you must allow the app location from setting',
+          [
+            {text: 'Settings', onPress: () => openSettings(), style: 'cancel'},
+            {text: 'Cancel'},
+          ],
+          { cancelable: true }),
+        (lat, long) => {
+          onSuccess(lat, long);
+        },
+      );
     } else {
-      showPopupAndOpenSettings('You need to let location permission to see business on map')
+      showPopupAndOpenSettings('To open the map, you must allow the app location from setting',)
     }
   } catch (err) {
     console.warn(err)

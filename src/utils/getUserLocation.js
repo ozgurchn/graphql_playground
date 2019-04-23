@@ -1,4 +1,4 @@
-import { Platform, PermissionsAndroid, Linking } from 'react-native';
+
 
 export function getUserLocation(onError, onSuccess) {
   let latitude;

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { Container, Header, Content, Footer, FooterTab, Button, Title, Icon, Badge, Text } from 'native-base';
 import Permissions from 'react-native-permissions'
-import { openLocation } from '../utils/permissionManager';
+import { requestMapPermission } from '../utils/permissionManager';
 import { getUserLocation } from '../utils/getUserLocation';
 import { searchBusiness } from '../utils/network/networkService';
 import Map from '../screens/map';
@@ -38,19 +38,25 @@ export default class Home extends Component {
           ],
           { cancelable: true })
       } else {
-        getUserLocation(
-          () => Alert.alert(
-            'Warning',
-            'To open the map, you must allow the app location from setting',
-            [
-              {text: 'Settings', onPress: () => openSettings(), style: 'cancel'},
-              {text: 'Cancel'},
-            ],
-            { cancelable: true }),
-          (lat, long) => {
+        if(Platform.OS ==='ios') {
+          getUserLocation(
+            () => Alert.alert(
+              'Warning',
+              'To open the map, you must allow the app location from setting',
+              [
+                {text: 'Settings', onPress: () => openSettings(), style: 'cancel'},
+                {text: 'Cancel'},
+              ],
+              { cancelable: true }),
+            (lat, long) => {
+              self.fetch(lat, long)
+            },
+          );
+        } else {
+          requestMapPermission((lat, long) => {
             self.fetch(lat, long)
-          },
-        );
+          })
+        }
       }
     });
   }
